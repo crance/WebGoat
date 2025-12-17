@@ -46,6 +46,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Set up JDK
+        uses: ./.github/actions/java-setup
+        with:
+          cache: 'maven'
+
       - name: Run ScanCentral SAST
         uses: fortify/github-action@v2
         with:
