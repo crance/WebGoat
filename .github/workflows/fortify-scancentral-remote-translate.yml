@@ -11,7 +11,7 @@ name: Fortify SC SAST - Remote Translate
 
 on:
   push:
-    branches: [ my-main ]
+    branches: [ 'my-main', 'feat/*' ]
   pull_request:
     branches: [ my-main ]
   workflow_dispatch:
@@ -64,6 +64,15 @@ jobs:
           SC_SAST_SCAN_EXTRA_OPTS: --sargs "'-debug' '-verbose'"
           DO_WAIT: ${{ github.event.inputs.DO_WAIT || 'true' }}
           DO_PACKAGE_DEBUG: true
+
+      - name: Upload scancentral package
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: scancentral-package
+          path: |
+            **/package.zip
+          retention-days: 7
 
       - name: Upload scan results
         if: always()
