@@ -17,14 +17,14 @@ on:
   workflow_dispatch:
     inputs:
       SC_CLIENT_VERSION:
-        description: 'ScanCentral client version (optional override)'
+        description: 'ScanCentral client version (optional)'
         required: false
       SC_SAST_SENSOR_VERSION:
-        description: 'ScanCentral SAST sensor version (optional override)'
+        description: 'ScanCentral SAST sensor version (optional)'
         required: false
       DO_WAIT:
-        description: 'Whether to wait for the scan to complete (true|false)'
-        required: false
+        description: 'Wait for the scan to complete (true|false)'
+        required: true
         default: 'true' 
 
 env:
@@ -65,6 +65,10 @@ jobs:
           java-version: '25'
           architecture: x64
           cache: "maven"
+      - name: Setup Maven
+        uses: s4u/setup-maven-action@v1.19.0
+        with:
+          maven-version: '3.9.11'
 
       - name: Run ScanCentral SAST
         uses: fortify/github-action@v2
