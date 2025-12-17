@@ -48,9 +48,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Export JAVA_VERSION
+      - name: Export JAVA_VERSION (Windows)
+        if: runner.os == 'Windows'
         shell: powershell
+        run: Add-Content -Path $env:GITHUB_ENV -Value 'JAVA_VERSION=25'
+
+      - name: Export JAVA_VERSION (Unix)
+        if: runner.os != 'Windows'
+        shell: bash
         run: echo "JAVA_VERSION=25" >> "$GITHUB_ENV"
+
       - name: Set up Temurin Java 25
         uses: actions/setup-java@v5
         with:
