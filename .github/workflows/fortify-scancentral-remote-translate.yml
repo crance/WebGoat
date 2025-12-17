@@ -48,10 +48,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up JDK
-        uses: ./.github/actions/java-setup
+      - name: Export JAVA_VERSION
+        shell: powershell
+        run: echo "JAVA_VERSION=25" >> "$GITHUB_ENV"
+      - name: Set up Temurin Java 25
+        uses: actions/setup-java@v5
         with:
-          cache: 'maven'
+          distribution: temurin
+          java-version: '25'
+          architecture: x64
+          cache: "maven"
 
       - name: Run ScanCentral SAST
         uses: fortify/github-action@v2
