@@ -48,26 +48,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Export JAVA_VERSION (Windows)
-        if: runner.os == 'Windows'
-        shell: powershell
-        run: Add-Content -Path $env:GITHUB_ENV -Value 'JAVA_VERSION=25'
-
-      - name: Export JAVA_VERSION (Unix)
-        if: runner.os != 'Windows'
-        shell: bash
-        run: echo "JAVA_VERSION=25" >> "$GITHUB_ENV"
-
-      - name: Set up Temurin Java 25
-        uses: actions/setup-java@v5
-        with:
-          distribution: temurin
-          java-version: '25'
-          architecture: x64
-          cache: "maven"
+      # Not needed as s4u/setup-maven-action also sets up Java
+      # - name: Setup Java
+      #   uses: ./.github/actions/java-setup
+      #   with:
+      #     cache: "maven"
       - name: Setup Maven
         uses: s4u/setup-maven-action@v1.19.0
         with:
+          java-version: 25
+          java-distribution: 'temurin'
           maven-version: '3.9.11'
 
       - name: Run ScanCentral SAST
