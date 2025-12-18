@@ -7,7 +7,7 @@ name: Fortify on Demand - SAST
 
 on:
   push:
-    branches: [ 'my-main', 'feat/*' ]
+    branches: [ 'feat/*' ]
   pull_request:
     branches: [ my-main ]
   workflow_dispatch:
