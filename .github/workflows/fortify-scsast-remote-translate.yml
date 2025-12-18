@@ -37,6 +37,7 @@ env:
 jobs:
   remote-translate-scan:
     name: Remote Translate + Scan
+    # Using self-hosted runner to avoid GitHub Actions >100MB upload limit
     # runs-on: ubuntu-latest
     runs-on: self-hosted
 
