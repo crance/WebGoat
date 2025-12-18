@@ -53,12 +53,12 @@ jobs:
         uses: fortify/github-action@v2
         with:
           sast-scan: true
+          debricked-sca-scan: true
         env:
           FOD_URL: ${{ secrets.FOD_PORTAL_URL }}
           FOD_CLIENT_ID: ${{ secrets.FOD_API_KEY }}
           FOD_CLIENT_SECRET: ${{ secrets.FOD_API_SECRET }}
           FOD_RELEASE: "${{env.FOD_APP_NAME}}:${{env.FOD_RELEASE_NAME}}"
-          # FOD_RELEASE: 1662898
           DO_PACKAGE_DEBUG: true
           DO_WAIT: ${{ github.event.inputs.DO_WAIT || 'true' }}
           DO_EXPORT: true
