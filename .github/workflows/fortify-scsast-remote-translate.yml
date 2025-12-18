@@ -1,11 +1,8 @@
-# Fortify ScanCentral SAST - Remote Translate
-
 # Required repository secrets:
 # - SSC_URL: Software Security Center's URL
 # - SC_SAST_URL: ScanCentral SAST Controller's URL
 # - SSC_TOKEN: SSC's API token
 # - SC_SAST_CLIENT_AUTH_TOKEN: pre-shared auth token for with ScanCentral SAST Controller
-
 
 name: Fortify SC SAST - Remote Translate
 
@@ -64,7 +61,8 @@ jobs:
           SC_SAST_TOKEN: ${{ secrets.SC_SAST_CLIENT_AUTH_TOKEN }}
           SSC_APPVERSION: "${{env.SSC_APP_NAME}}:${{env.SSC_APP_VER_NAME}}"
           SSC_LOGIN_EXTRA_OPTS: --socket-timeout=60s --sc-sast-url ${{ secrets.SC_SAST_URL }}
+          DO_PACKAGE_DEBUG: true
+          PACKAGE_EXTRA_OPTS: -include "Dockerfile.*"
           SC_SAST_SCAN_EXTRA_OPTS: --sargs "'-debug' '-verbose'"
           DO_WAIT: ${{ github.event.inputs.DO_WAIT || 'true' }}
-          DO_PACKAGE_DEBUG: true
           DO_EXPORT: true
