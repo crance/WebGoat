@@ -1,0 +1,64 @@
+# Required repository secrets:
+# - FOD_PORTAL_URL: Fortify on Demand's portal URL
+# - FOD_API_KEY: Fortify on Demand client ID (API Key)
+# - FOD_API_SECRET: Fortify on Demand client secret (API Secret)
+
+name: Fortify on Demand - SAST
+
+on:
+  push:
+    branches: [ 'my-main', 'feat/*' ]
+  pull_request:
+    branches: [ my-main ]
+  workflow_dispatch:
+    inputs:
+      SC_CLIENT_VERSION:
+        description: 'ScanCentral client version (optional)'
+        required: false
+      FOD_UPLOADER_NOTES:
+        description: 'Scan Notes (optional)'
+        required: false
+        default: 'Triggered by GitHub Actions'
+      DO_WAIT:
+        description: 'Wait for the scan to complete (true|false)'
+        required: true
+        default: 'true' 
+
+env:
+
+  # prefer workflow_dispatch input (manual run) then repository var
+  SC_CLIENT_VERSION: ${{ github.event.inputs.SC_CLIENT_VERSION || vars.SC_CLIENT_VERSION }}
+  FOD_UPLOADER_NOTES: ${{ github.event.inputs.FOD_UPLOADER_NOTES || 'Triggered by GitHub Actions' }}
+
+  FOD_APP_NAME: 'WebGoat'
+  FOD_RELEASE_NAME: 'main'
+
+jobs:
+  sast-scan:
+    name: FoD SAST
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Maven
+        uses: s4u/setup-maven-action@v1.19.0
+        with:
+          java-version: 25
+          java-distribution: 'temurin'
+          maven-version: '3.9.11'
+
+      - name: Run ScanCentral SAST
+        uses: fortify/github-action@v2
+        with:
+          sast-scan: true
+        env:
+          FOD_URL: ${{ secrets.FOD_PORTAL_URL }}
+          FOD_CLIENT_ID: ${{ secrets.FOD_API_KEY }}
+          FOD_CLIENT_SECRET: ${{ secrets.FOD_API_SECRET }}
+          FOD_RELEASE: "${{env.FOD_APP_NAME}}:${{env.FOD_RELEASE_NAME}}"
+          # FOD_RELEASE: 1662898
+          DO_PACKAGE_DEBUG: true
+          DO_WAIT: ${{ github.event.inputs.DO_WAIT || 'true' }}
+          DO_EXPORT: true
