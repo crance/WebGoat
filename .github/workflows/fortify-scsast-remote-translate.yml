@@ -6,6 +6,10 @@
 
 name: Fortify SC SAST - Remote Translate
 
+permissions:
+  contents: read
+  security-events: write
+
 on:
   push:
     branches: [ 'feat/*' ]
@@ -31,7 +35,7 @@ env:
   SC_SAST_SENSOR_VERSION: ${{ github.event.inputs.SC_SAST_SENSOR_VERSION || vars.SC_SAST_SENSOR_VERSION }}
 
   FORTIFY_BUILD_ID: ${{ github.event.repository.name }}
-  SSC_APP_NAME: 'webgoat'
+  SSC_APP_NAME: 'WebGoat'
   SSC_APP_VER_NAME: 'scsast_remotetranslate'
 
 jobs:
