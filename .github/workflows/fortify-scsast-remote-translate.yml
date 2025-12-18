@@ -62,7 +62,7 @@ jobs:
           SSC_APPVERSION: "${{env.SSC_APP_NAME}}:${{env.SSC_APP_VER_NAME}}"
           SSC_LOGIN_EXTRA_OPTS: --socket-timeout=60s --sc-sast-url ${{ secrets.SC_SAST_URL }}
           DO_PACKAGE_DEBUG: true
-          PACKAGE_EXTRA_OPTS: -include "Dockerfile.*"
+          PACKAGE_EXTRA_OPTS: -include "Dockerfile_desktop"
           SC_SAST_SCAN_EXTRA_OPTS: --sargs "'-debug' '-verbose'"
           DO_WAIT: ${{ github.event.inputs.DO_WAIT || 'true' }}
           DO_EXPORT: true
