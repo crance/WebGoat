@@ -1,0 +1,68 @@
+# Required repository secrets:
+# - SSC_URL: Software Security Center's URL
+# - SC_SAST_URL: ScanCentral SAST Controller's URL
+# - SSC_TOKEN: SSC's API token
+# - SC_SAST_CLIENT_AUTH_TOKEN: pre-shared auth token for with ScanCentral SAST Controller
+
+name: Fortify SC SAST - Remote Translate
+
+on:
+  push:
+    branches: [ 'my-main', 'feat/*' ]
+  pull_request:
+    branches: [ my-main ]
+  workflow_dispatch:
+    inputs:
+      SC_CLIENT_VERSION:
+        description: 'ScanCentral client version (optional)'
+        required: false
+      SC_SAST_SENSOR_VERSION:
+        description: 'ScanCentral SAST sensor version (optional)'
+        required: false
+      DO_WAIT:
+        description: 'Wait for the scan to complete (true|false)'
+        required: true
+        default: 'true' 
+
+env:
+
+  # prefer workflow_dispatch input (manual run) then repository var
+  SC_CLIENT_VERSION: ${{ github.event.inputs.SC_CLIENT_VERSION || vars.SC_CLIENT_VERSION }}
+  SC_SAST_SENSOR_VERSION: ${{ github.event.inputs.SC_SAST_SENSOR_VERSION || vars.SC_SAST_SENSOR_VERSION }}
+
+  FORTIFY_BUILD_ID: ${{ github.event.repository.name }}
+  SSC_APP_NAME: 'webgoat'
+  SSC_APP_VER_NAME: 'scsast_remotetranslate'
+
+jobs:
+  remote-translate-scan:
+    name: Remote Translate + Scan
+    # Using self-hosted runner to avoid GitHub Actions >100MB upload limit
+    # runs-on: ubuntu-latest
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Maven
+        uses: s4u/setup-maven-action@v1.19.0
+        with:
+          java-version: 25
+          java-distribution: 'temurin'
+          maven-version: '3.9.11'
+
+      - name: Run ScanCentral SAST
+        uses: fortify/github-action@v2
+        with:
+          sast-scan: true
+        env:
+          SSC_URL: ${{ secrets.SSC_URL }}
+          SSC_TOKEN: ${{ secrets.SSC_TOKEN }}
+          SC_SAST_TOKEN: ${{ secrets.SC_SAST_CLIENT_AUTH_TOKEN }}
+          SSC_APPVERSION: "${{env.SSC_APP_NAME}}:${{env.SSC_APP_VER_NAME}}"
+          SSC_LOGIN_EXTRA_OPTS: --socket-timeout=60s --sc-sast-url ${{ secrets.SC_SAST_URL }}
+          DO_PACKAGE_DEBUG: true
+          SC_SAST_SCAN_EXTRA_OPTS: --sargs "'-debug' '-verbose'"
+          DO_WAIT: ${{ github.event.inputs.DO_WAIT || 'true' }}
+          DO_EXPORT: true
