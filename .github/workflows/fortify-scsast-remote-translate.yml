@@ -8,7 +8,7 @@ name: Fortify SC SAST - Remote Translate
 
 on:
   push:
-    branches: [ 'my-main', 'feat/*' ]
+    branches: [ 'feat/*' ]
   pull_request:
     branches: [ my-main ]
   workflow_dispatch:
