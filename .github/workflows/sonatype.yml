@@ -1,0 +1,88 @@
+# Required repository secrets:
+# - SSC_URL: Software Security Center's URL
+# - SSC_TOKEN: SSC's API token
+
+# - NEXUS_IQ_URL: Sonatype Nexus IQ's URL
+# - NEXUS_IQ_USERNAME: Sonatype Nexus IQ's username
+# - NEXUS_IQ_PASSWORD: Sonatype Nexus IQ's password
+
+# See more examples - https://help.sonatype.com/en/sonatype-github-actions.html
+
+name: Sonatype Software Component Analysis
+
+on:
+  push:
+    branches: [ 'feat/*' ]
+  pull_request:
+    branches: [ my-main ]
+  workflow_dispatch:
+    inputs:
+      NEXUSIQ_STAGE:
+        description: 'Nexus IQ stage (optional)'
+        required: false
+        default: 'build'
+
+env:
+  SSC_APP_NAME: 'WebGoat'
+  SSC_APP_VER_NAME: 'sonatype'
+
+  NEXUSIQ_APPID: "webgoat"
+
+  # prefer workflow_dispatch input (manual run) then repository var/ default
+  NEXUSIQ_STAGE: ${{ github.event.inputs.NEXUSIQ_STAGE || 'build' }}
+
+jobs:
+  sca-scan:
+    name: Software Component Analysis
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Maven
+        uses: s4u/setup-maven-action@v1.19.0
+        with:
+          java-version: 25
+          java-distribution: 'temurin'
+          maven-version: '3.9.11'
+
+      - name: Build with Maven
+        run: mvn clean package -DskipTests
+
+      - name: Run Sonatype SCA
+        id: evaluate
+        uses: sonatype/actions/evaluate@v1
+        with:
+          iq-server-url: ${{ secrets.NEXUS_IQ_URL }}
+          username: ${{ secrets.NEXUS_IQ_USERNAME }}
+          password: ${{ secrets.NEXUS_IQ_PASSWORD }}
+          application-id: ${{ env.NEXUSIQ_APPID }}
+          stage: ${{ env.NEXUSIQ_STAGE }}
+          # scan-targets: pom.xml
+          scan-targets: >
+            ./**/target/*.jar 
+            ./**/target/*.war 
+            ./src/main/resources/**/*.js 
+          result-file: evaluation-result
+          upload-sarif-file: true
+          enable-reachability: true
+
+      - name: Log evaluate action output
+        run: echo "${{ steps.evaluate.outputs.scan-id }} ${{ steps.evaluate.outputs.report-url }}"
+  sonatype-ssc-synchronization:
+    needs: sca-scan
+    runs-on: self-hosted
+    steps:
+      - name: Upload to SSC
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -sS "${{ secrets.FORTIFY_SONATYPE_INTEGRATION_SERVICE_URL }}/startScanLoad" \
+            --get \
+            --data-urlencode "sonatypeProject=${{ env.NEXUSIQ_APPID }}" \
+            --data-urlencode "sonatypeProjectStage=${{ env.NEXUSIQ_STAGE }}" \
+            --data-urlencode "fortifyApplication=${{ env.SSC_APP_NAME }}" \
+            --data-urlencode "fortifyApplicationVersion=${{ env.SSC_APP_VER_NAME }}" \
+            --data-urlencode "forceUpload=true" \
+            --data-urlencode "overwrite=true"
