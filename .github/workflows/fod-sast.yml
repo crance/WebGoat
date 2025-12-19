@@ -36,8 +36,8 @@ env:
   FOD_RELEASE_NAME: 'main'
 
 jobs:
-  sast-scan:
-    name: FoD SAST
+  scan:
+    name: SAST + SCA
     runs-on: ubuntu-latest
 
     steps:
@@ -51,7 +51,7 @@ jobs:
           java-distribution: 'temurin'
           maven-version: '3.9.11'
 
-      - name: Run ScanCentral SAST
+      - name: Run FoD SAST
         uses: fortify/github-action@v2
         with:
           sast-scan: true

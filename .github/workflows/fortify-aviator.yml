@@ -40,7 +40,7 @@ env:
 
 jobs:
   audit:
-    name: Aviator Audit
+    name: Audit
     # Using self-hosted runner to avoid CloudFlare >100MB upload limit
     # runs-on: ubuntu-latest
     runs-on: self-hosted
@@ -53,7 +53,7 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
 
-      - name: Download FCLI jar
+      - name: Download FCLI
         shell: bash
         run: |
           set -euo pipefail

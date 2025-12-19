@@ -8,7 +8,7 @@
 
 # See more examples - https://help.sonatype.com/en/sonatype-github-actions.html
 
-name: Sonatype Software Component Analysis
+name: Sonatype SCA
 
 permissions:
   contents: read
@@ -34,8 +34,8 @@ env:
   NEXUSIQ_STAGE: ${{ github.event.inputs.NEXUSIQ_STAGE || 'build' }}
 
 jobs:
-  sca-scan:
-    name: Software Component Analysis
+  scan:
+    name: SCA
     runs-on: ubuntu-latest
 
     steps:
@@ -52,7 +52,7 @@ jobs:
       - name: Build with Maven
         run: mvn clean package -DskipTests
 
-      - name: Run Sonatype SCA
+      - name: Sonatype SCA
         id: evaluate
         uses: sonatype/actions/evaluate@v1
         with:
@@ -73,7 +73,8 @@ jobs:
       - name: Log evaluate action output
         run: echo "${{ steps.evaluate.outputs.scan-id }} ${{ steps.evaluate.outputs.report-url }}"
   sonatype-ssc-synchronization:
-    needs: sca-scan
+    name: Synchronize
+    needs: scan
     runs-on: self-hosted
     steps:
       - name: Upload to SSC
