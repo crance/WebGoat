@@ -10,8 +10,6 @@ permissions:
   security-events: write
 
 on:
-  push:
-    branches: [ 'feat/*' ]
   pull_request:
     branches: [ my-main ]
   workflow_dispatch:
