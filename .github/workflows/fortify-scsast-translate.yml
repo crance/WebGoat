@@ -4,7 +4,7 @@
 # - SSC_TOKEN: SSC's API token
 # - SC_SAST_CLIENT_AUTH_TOKEN: pre-shared auth token for with ScanCentral SAST Controller
 
-name: Fortify SC SAST - Remote Translate
+name: Fortify - SC SAST (Remote Translate)
 
 permissions:
   contents: read
@@ -37,8 +37,8 @@ env:
   SSC_APP_VER_NAME: 'scsast_remotetranslate'
 
 jobs:
-  remote-translate-scan:
-    name: Remote Translate + Scan
+  scan:
+    name: SAST
     # Using self-hosted runner to avoid GitHub Actions >100MB upload limit
     # runs-on: ubuntu-latest
     runs-on: self-hosted
@@ -54,7 +54,7 @@ jobs:
           java-distribution: 'temurin'
           maven-version: '3.9.11'
 
-      - name: Run ScanCentral SAST
+      - name: ScanCentral SAST
         uses: fortify/github-action@v2
         with:
           sast-scan: true
