@@ -1,0 +1,107 @@
+# Required repository secrets:
+# - SSC_URL: Software Security Center's URL
+# - SSC_TOKEN: SSC's API token
+# - FORTIFY_AVIATOR_TOKEN: Aviator's API token
+
+# Required repository variables:
+# - FORTIFY_AVIATOR_URL: Aviator's URL
+
+name: Fortify Aviator Audit
+
+concurrency:
+  group: fortify-aviator-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+on:
+  workflow_dispatch:
+    inputs:
+      FOLDER_FILTER_CRITERIA:
+        description: 'Folder filter criteria (optional)'
+        default: 'critical,high'
+        required: false
+      FCLI_VERSION:
+        description: 'FCLI version (optional)'
+        default: 'latest'
+        required: false
+
+env:
+
+  # prefer workflow_dispatch input (manual run) then repository var
+  FOLDER_FILTER_CRITERIA: ${{ github.event.inputs.FOLDER_FILTER_CRITERIA || 'critical,high' }}
+  FCLI_VERSION: ${{ github.event.inputs.FCLI_VERSION || 'latest' }}
+
+  SSC_APP_NAME: 'WebGoat'
+  SSC_APP_VER_NAME: 'aviator'
+
+  AVIATOR_APP_NAME: 'webgoat'
+
+jobs:
+  audit:
+    name: Aviator Audit
+    # Using self-hosted runner to avoid CloudFlare >100MB upload limit
+    # runs-on: ubuntu-latest
+    runs-on: self-hosted
+
+    steps:
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Download FCLI jar
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="${{ env.FCLI_VERSION }}"
+          DEST="fcli.jar"
+          if [ "$VERSION" = "latest" ]; then
+            TAG=$(curl -s https://api.github.com/repos/fortify/fcli/releases/latest | sed -n 's/.*"tag_name": *"\(.*\)".*/\1/p')
+          else
+            case "$VERSION" in
+              v*) TAG="$VERSION" ;;
+              *) TAG="v$VERSION" ;;
+            esac
+          fi
+          URL="https://github.com/fortify/fcli/releases/download/${TAG}/fcli.jar"
+          echo "Downloading ${URL}"
+          curl -sSL -o "${DEST}" "${URL}"
+          echo "FCLI_JAR=$PWD/${DEST}" >> "$GITHUB_ENV"
+
+      - name: Login to SSC
+        shell: bash
+        run: |
+          set -euo pipefail
+          java -jar "$FCLI_JAR" ssc session login --url "${{ secrets.SSC_URL }}" --token "${{ secrets.SSC_TOKEN }}"
+
+      - name: Login to Aviator
+        shell: bash
+        run: |
+          set -euo pipefail
+          printf "%s" "${{ secrets.FORTIFY_AVIATOR_TOKEN }}" > aviator_token.json
+          java -jar "$FCLI_JAR" aviator session login --url "${{ vars.FORTIFY_AVIATOR_URL }}" --token aviator_token.json
+
+      - name: Audit
+        shell: bash
+        run: |
+          set -euo pipefail
+          java -jar "$FCLI_JAR" aviator ssc audit \
+            --av "${{env.SSC_APP_NAME}}:${{env.SSC_APP_VER_NAME}}" \
+            --app "${{ env.AVIATOR_APP_NAME }}" \
+            --folder "${{ env.FOLDER_FILTER_CRITERIA }}" 
+
+      - name: Logout from SSC
+        shell: bash
+        run: |
+          set -euo pipefail
+          java -jar "$FCLI_JAR" ssc session logout
+
+      - name: Logout from Aviator
+        shell: bash
+        run: |
+          set -euo pipefail
+          java -jar "$FCLI_JAR" aviator session logout
